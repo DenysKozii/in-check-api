@@ -4,8 +4,8 @@ import lombok.Data;
 
 
 @Data
-public class UserDto {
+public class GameDto {
 
-    private String lastType;
+    private Long id;
 
 }

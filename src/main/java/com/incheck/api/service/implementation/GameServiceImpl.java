@@ -1,7 +1,8 @@
 package com.incheck.api.service.implementation;
 
-import com.incheck.api.dto.UserDto;
-import com.incheck.api.service.UserService;
+import com.incheck.api.dto.GameDto;
+import com.incheck.api.dto.ListGameResponses;
+import com.incheck.api.service.GameService;
 import com.incheck.api.utils.AbstractHttpClient;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -11,25 +12,28 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+import java.util.List;
+
 @Service
 @Slf4j
-public class UserServiceImpl extends AbstractHttpClient implements UserService {
+public class GameServiceImpl extends AbstractHttpClient implements GameService {
 
-    @Value("${chess-api-stats-url}")
-    private String STATS_URL;
+    @Value("${chess-api-games-url}")
+    private String GAMES_URL;
 
-    public UserServiceImpl(RestTemplate restTemplate) {
+    public GameServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
     }
 
     @Override
-    public UserDto info(String username) throws RuntimeException {
+    public List<GameDto> gamesByUserId(String userId) throws RuntimeException {
         try {
-            return get(STATS_URL + username, UserDto.class);
+            return get(GAMES_URL + userId, ListGameResponses.class);
         }catch (RuntimeException e) {
-            log.error("error while getting user by url {}", STATS_URL);
+            log.error("error while getting games by url {}", GAMES_URL);
         }
-        return new UserDto();
+        return Collections.emptyList();
     }
 
     @Override
@@ -38,4 +42,5 @@ public class UserServiceImpl extends AbstractHttpClient implements UserService {
         headers.add("accept-language", "en-US");
         return headers;
     }
+
 }

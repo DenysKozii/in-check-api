@@ -30,9 +30,6 @@ public abstract class AbstractHttpClient implements RestHttpClient {
         log.info("Get by url {}", url);
         try {
             HttpEntity<T> request = new HttpEntity<>(headers());
-            System.out.println("restTemplate.exchange(url, HttpMethod.GET, request, response).getBody()");
-            System.out.println(restTemplate.exchange(url, HttpMethod.GET, request, response).getBody());
-            System.out.println("restTemplate.exchange(url, HttpMethod.GET, request, response).getBody()");
             return restTemplate.exchange(url, HttpMethod.GET, request, response).getBody();
         } catch (RuntimeException e) {
             log.error("Error while processing get request", e);
