@@ -1,4 +1,4 @@
-package com.incheck.api.repositories;
+package com.incheck.api.repository;
 
 import com.incheck.api.entity.User;
 
