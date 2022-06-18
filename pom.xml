@@ -23,6 +23,9 @@
         <mapstruct.version>1.5.1.Final</mapstruct.version>
         <lombok.version>1.18.24</lombok.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <swagger2.version>3.0.0</swagger2.version>
+        <swagger-ui.version>3.0.0</swagger-ui.version>
+        <jsoup.version>1.14.3</jsoup.version>
     </properties>
 
     <dependencies>
@@ -69,6 +72,21 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>${swagger2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>${swagger-ui.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
         </dependency>
     </dependencies>
 
