@@ -8,4 +8,5 @@ public interface GameService {
 
     List<GameDto> gamesByUserId(String userId) throws RuntimeException;
 
+    List<String> gameMoves(String userid, Integer id);
 }
