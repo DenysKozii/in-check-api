@@ -28,9 +28,14 @@ public class GameController {
        return gameService.gamesByUserId(userId);
     }
 
-    @GetMapping("{userId}/{id}")
-    public List<String> gameMoves(@PathVariable String userId, @PathVariable Integer id) {
-       return gameService.gameMoves(userId, id);
+    @GetMapping("{gameId}")
+    public List<String> gameMoves(@PathVariable String gameId) {
+       return gameService.gameMoves(gameId);
+    }
+
+    @GetMapping("moves/{username}")
+    public List<List<String>> allMoves(@PathVariable String username) {
+        return gameService.getAllMoves(username);
     }
 
 }

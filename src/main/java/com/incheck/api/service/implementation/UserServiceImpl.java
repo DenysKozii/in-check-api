@@ -31,7 +31,7 @@ public class UserServiceImpl extends AbstractHttpClient implements UserService {
     }
 
     @Override
-    public String info(String username) throws RuntimeException {
+    public String getId(String username) throws RuntimeException {
         try {
             Document document = Jsoup.connect(STATS_URL + username).get();
             Elements html = document.getAllElements();

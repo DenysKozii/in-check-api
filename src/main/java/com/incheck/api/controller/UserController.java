@@ -20,8 +20,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("{username}")
-    public String info(@PathVariable String username) throws RuntimeException {
-        return userService.info(username);
+    public String getId(@PathVariable String username) throws RuntimeException {
+        return userService.getId(username);
     }
 
 }

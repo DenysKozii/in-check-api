@@ -3,8 +3,13 @@ package com.incheck.api.service.implementation;
 import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.ListGameResponses;
 import com.incheck.api.service.GameService;
+import com.incheck.api.service.UserService;
 import com.incheck.api.utils.AbstractHttpClient;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -16,19 +21,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
 @Service
 @Slf4j
 public class GameServiceImpl extends AbstractHttpClient implements GameService {
+
+    @Autowired
+    private UserService userService;
 
     @Value("${chess-api-games-url}")
     private String GAMES_URL;
@@ -52,10 +54,9 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     }
 
     @Override
-    public List<String> gameMoves(String userId, Integer id) {
-        GameDto gameDto = gamesByUserId(userId).get(id);
+    public List<String> gameMoves(String gameId) {
         try {
-            Document document = Jsoup.connect(GAME_INFO_URL + gameDto.getId()).get();
+            Document document = Jsoup.connect(GAME_INFO_URL + gameId).get();
             Elements html = document.getAllElements();
             Pattern pattern = Pattern.compile(PGN_REGEX);
             Matcher matcher = pattern.matcher(html.toString());
@@ -74,9 +75,16 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                                    .replace(".", ""))
                           .collect(Collectors.toList());
         } catch (IOException e) {
-            log.error("Parse html has an error by url: {}", GAME_INFO_URL + gameDto.getId());
-            throw new RuntimeException(String.format("Jsoup connection failed for url: %s", GAME_INFO_URL + gameDto.getId()));
+            log.error("Parse html has an error by url: {}", GAME_INFO_URL + gameId);
+            throw new RuntimeException(String.format("Jsoup connection failed for url: %s", GAME_INFO_URL + gameId));
         }
+    }
+
+    @Override
+    public List<List<String>> getAllMoves(String username) {
+        String userId = userService.getId(username);
+        List<GameDto> games = gamesByUserId(userId);
+        return games.stream().map(g->gameMoves(g.getId())).collect(Collectors.toList());
     }
 
     @Override
