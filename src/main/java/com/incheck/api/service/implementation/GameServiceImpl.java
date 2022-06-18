@@ -70,8 +70,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                 matches.add(matcher.group());
             }
             return matches.stream()
-                          .map(s->s.replace(".\\u0020", ""))
-                          .map(s->s.replace("\\u0020", ""))
+                          .map(s->s.replace("\\u0020", "")
+                                   .replace(".", ""))
                           .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Parse html has an error by url: {}", GAME_INFO_URL + gameDto.getId());

@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class UserDto {
 
-    private String lastType;
+    private String id;
 
 }

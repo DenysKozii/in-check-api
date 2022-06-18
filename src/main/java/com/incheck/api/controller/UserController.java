@@ -20,7 +20,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("{username}")
-    public UserDto info(@PathVariable String username) throws RuntimeException {
+    public String info(@PathVariable String username) throws RuntimeException {
         return userService.info(username);
     }
 
