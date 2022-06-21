@@ -20,4 +20,6 @@ public class UserDto {
 
     private Boolean badMood;
 
+    private Boolean swift;
+
 }

@@ -42,6 +42,12 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              String OPENINGS_URL;
     @Value("${chess-api-opening-url-tail}")
     private              String OPENINGS_TAIL;
+    @Value("${high-win-rate}")
+    private              Double HIGH_WIN_RATE;
+    @Value("${low-win-rate}")
+    private              Double LOW_WIN_RATE;
+    @Value("${swift-amount-condition}")
+    private              Double SWIFT_AMOUNT_CONDITION;
     private final static String MOVE_REGEX      = "(\\.\\\\u0020.\\\\u0020)|(\\.\\\\u0020..\\\\u0020)|(\\.\\\\u0020...\\\\u0020)|(\\.\\\\u0020....\\\\u0020)|(\\.\\\\u0020.....\\\\u0020)";
     private final static String PGN_REGEX       = "(pgn:).*";
     private final static String COLOR_REGEX     = "(White\\\\u0020\\\\u0022.+?(?=\\\\))|(Black\\\\u0020\\\\u0022.+?(?=\\\\))";
@@ -157,20 +163,24 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         UserDto user = new UserDto();
         List<GameDto> games = getAllMoves(username);
         double wins = 0;
+        double movesCount = 0;
         for (GameDto game : games) {
-            if (game.isWon()){
+            if (game.isWon()) {
                 wins++;
             }
+            movesCount += game.getMoves().size() / 2.0;
         }
-        user.setWinRate(wins/games.size());
-        user.setHighWinRate(wins/games.size() > 0.55);
-        user.setLowWinRate(wins/games.size() < 0.45);
+        user.setWinRate(wins / games.size());
+        user.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
+        user.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
         user.setGoodMood(games.get(games.size() - 1).isWon() &&
                                  games.get(games.size() - 2).isWon() &&
                                  games.get(games.size() - 3).isWon());
         user.setBadMood(!games.get(games.size() - 1).isWon() &&
                                 !games.get(games.size() - 2).isWon() &&
                                 !games.get(games.size() - 3).isWon());
+        movesCount /= games.size();
+        user.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
         return user;
     }
 
