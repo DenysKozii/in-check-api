@@ -1,6 +1,7 @@
 package com.incheck.api.controller;
 
-import com.incheck.api.dto.MoveDto;
+import com.incheck.api.dto.GameDto;
+import com.incheck.api.dto.UserDto;
 import com.incheck.api.service.GameService;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -22,8 +23,13 @@ public class GameController {
     private final GameService gameService;
 
     @GetMapping("{username}")
-    public List<List<MoveDto>> allMoves(@PathVariable String username) {
+    public List<GameDto> allMoves(@PathVariable String username) {
         return gameService.getAllMoves(username);
+    }
+
+    @GetMapping("statistics/{username}")
+    public UserDto getStatistics(@PathVariable String username) throws RuntimeException {
+        return gameService.getStatistics(username);
     }
 
 }

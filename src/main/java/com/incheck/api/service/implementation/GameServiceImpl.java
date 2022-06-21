@@ -1,8 +1,10 @@
 package com.incheck.api.service.implementation;
 
 import com.incheck.api.dto.GameDto;
-import com.incheck.api.dto.ListGameResponses;
+import com.incheck.api.dto.GameIdResponseDto;
+import com.incheck.api.dto.ListGameIdResponses;
 import com.incheck.api.dto.MoveDto;
+import com.incheck.api.dto.UserDto;
 import com.incheck.api.service.GameService;
 import com.incheck.api.service.UserService;
 import com.incheck.api.utils.AbstractHttpClient;
@@ -19,7 +21,6 @@ import org.springframework.web.client.RestTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -37,26 +38,33 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              String GAMES_URL;
     @Value("${chess-api-game-info-url}")
     private              String GAME_INFO_URL;
-    private final static String MOVE_REGEX  = "(\\.\\\\u0020.\\\\u0020)|(\\.\\\\u0020..\\\\u0020)|(\\.\\\\u0020...\\\\u0020)|(\\.\\\\u0020....\\\\u0020)|(\\.\\\\u0020.....\\\\u0020)";
-    private final static String PGN_REGEX   = "(pgn:).*";
-    private final static String COLOR_REGEX = "(White\\\\u0020\\\\u0022.+?(?=\\\\))|(Black\\\\u0020\\\\u0022.+?(?=\\\\))";
+    @Value("${chess-api-opening-url}")
+    private              String OPENINGS_URL;
+    @Value("${chess-api-opening-url-tail}")
+    private              String OPENINGS_TAIL;
+    private final static String MOVE_REGEX      = "(\\.\\\\u0020.\\\\u0020)|(\\.\\\\u0020..\\\\u0020)|(\\.\\\\u0020...\\\\u0020)|(\\.\\\\u0020....\\\\u0020)|(\\.\\\\u0020.....\\\\u0020)";
+    private final static String PGN_REGEX       = "(pgn:).*";
+    private final static String COLOR_REGEX     = "(White\\\\u0020\\\\u0022.+?(?=\\\\))|(Black\\\\u0020\\\\u0022.+?(?=\\\\))";
+    private final static String WHITE_WON_REGEX = "(u002D0)";
 
     public GameServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
     }
 
     @Override
-    public List<GameDto> gamesByUserId(String userId) throws RuntimeException {
+    public List<GameIdResponseDto> gamesByUserId(String userId) throws RuntimeException {
         try {
-            return get(GAMES_URL + userId, ListGameResponses.class);
-        }catch (RuntimeException e) {
+            return get(GAMES_URL + userId, ListGameIdResponses.class);
+        } catch (RuntimeException e) {
             log.error("error while getting games by url {}", GAMES_URL);
         }
         return Collections.emptyList();
     }
 
     @Override
-    public List<MoveDto> gameMoves(String gameId, String username) {
+    public GameDto gameMoves(String gameId, String username) {
+        GameDto game = new GameDto();
+        game.setId(gameId);
         try {
             Document document = Jsoup.connect(GAME_INFO_URL + gameId).get();
             Elements html = document.getAllElements();
@@ -83,7 +91,6 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
             }
             pattern = Pattern.compile(MOVE_REGEX);
             matcher = pattern.matcher(pgn);
-            List<MoveDto> moves = new ArrayList<>();
             int moveCounter = 0;
             while (matcher.find()) {
                 String move = matcher.group()
@@ -105,9 +112,13 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                     }
                 }
                 moveCounter++;
-                moves.add(moveDto);
+                game.getMoves().add(moveDto);
             }
-            return moves;
+            pattern = Pattern.compile(WHITE_WON_REGEX);
+            matcher = pattern.matcher(pgn);
+            boolean whiteWon = matcher.find();
+            game.setWon((whiteWon && white) || (!whiteWon && !white));
+            return game;
         } catch (IOException e) {
             log.error("Parse html has an error by url: {}", GAME_INFO_URL + gameId);
             throw new RuntimeException(String.format("Jsoup connection failed for url: %s", GAME_INFO_URL + gameId));
@@ -115,10 +126,46 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     }
 
     @Override
-    public List<List<MoveDto>> getAllMoves(String username) {
+    public List<GameDto> getAllMoves(String username) {
         String userId = userService.getId(username);
-        List<GameDto> games = gamesByUserId(userId);
-        return games.stream().map(g -> gameMoves(g.getId(), username)).collect(Collectors.toList());
+        List<GameIdResponseDto> gameIds = gamesByUserId(userId);
+        return gameIds.stream()
+                      .map(gameId -> gameMoves(gameId.getId(), username))
+                      .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getOpenings(String username) throws RuntimeException {
+//        List<List<MoveDto>> games = getAllMoves(username);
+//        for (List<MoveDto> moves: games) {
+//
+//        }
+        try {
+            String url = OPENINGS_URL + "e4" + OPENINGS_TAIL + "1&origMoves=e4";
+            Document document = Jsoup.connect(url).get();
+            Elements html = document.getAllElements();
+            System.out.println(html);
+        } catch (IOException e) {
+            log.error("Parse html has an error by url: {}", OPENINGS_URL);
+            throw new RuntimeException(String.format("Jsoup connection failed for url: %s", OPENINGS_URL));
+        }
+        return "Queen's gambit";
+    }
+
+    @Override
+    public UserDto getStatistics(String username) {
+        UserDto user = new UserDto();
+        List<GameDto> games = getAllMoves(username);
+        double wins = 0;
+        for (GameDto game : games) {
+            if (game.isWon()){
+                wins++;
+            }
+        }
+        user.setWinRate(wins/games.size());
+        user.setHighWinRate(wins/games.size() > 0.55);
+        user.setLowWinRate(wins/games.size() < 0.45);
+        return user;
     }
 
     @Override
