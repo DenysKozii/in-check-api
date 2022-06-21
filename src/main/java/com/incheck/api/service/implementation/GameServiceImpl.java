@@ -165,6 +165,12 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         user.setWinRate(wins/games.size());
         user.setHighWinRate(wins/games.size() > 0.55);
         user.setLowWinRate(wins/games.size() < 0.45);
+        user.setGoodMood(games.get(games.size() - 1).isWon() &&
+                                 games.get(games.size() - 2).isWon() &&
+                                 games.get(games.size() - 3).isWon());
+        user.setBadMood(!games.get(games.size() - 1).isWon() &&
+                                !games.get(games.size() - 2).isWon() &&
+                                !games.get(games.size() - 3).isWon());
         return user;
     }
 

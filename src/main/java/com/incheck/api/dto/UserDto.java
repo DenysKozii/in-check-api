@@ -16,4 +16,8 @@ public class UserDto {
 
     private Boolean lowWinRate;
 
+    private Boolean goodMood;
+
+    private Boolean badMood;
+
 }
