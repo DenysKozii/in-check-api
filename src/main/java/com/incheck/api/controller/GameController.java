@@ -27,8 +27,8 @@ public class GameController {
         return gameService.getAllMoves(username);
     }
 
-    @GetMapping("statistics/{username}")
-    public UserDto getStatistics(@PathVariable String username) throws RuntimeException {
+    @GetMapping("stats/{username}")
+    public UserDto getStats(@PathVariable String username) throws RuntimeException {
         return gameService.getStatistics(username);
     }
 

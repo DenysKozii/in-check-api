@@ -1,6 +1,7 @@
 package com.incheck.api.controller;
 
 import com.incheck.api.dto.UserDto;
+import com.incheck.api.dto.UserStatsResponseDto;
 import com.incheck.api.service.UserService;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -22,6 +23,11 @@ public class UserController {
     @GetMapping("{username}")
     public String getId(@PathVariable String username) throws RuntimeException {
         return userService.getId(username);
+    }
+
+    @GetMapping("stats/{username}")
+    public UserStatsResponseDto getStats(@PathVariable String username) throws RuntimeException {
+        return userService.getStats(username);
     }
 
 }

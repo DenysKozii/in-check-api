@@ -4,8 +4,10 @@ import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GameIdResponseDto;
 import com.incheck.api.dto.ListGameIdResponses;
 import com.incheck.api.dto.MoveDto;
-import com.incheck.api.dto.TagsInfoDto;
+import com.incheck.api.dto.TagsDto;
 import com.incheck.api.dto.UserDto;
+import com.incheck.api.dto.UserStatsDto;
+import com.incheck.api.dto.UserStatsResponseDto;
 import com.incheck.api.service.GameService;
 import com.incheck.api.service.UserService;
 import com.incheck.api.utils.AbstractHttpClient;
@@ -49,6 +51,10 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double LOW_WIN_RATE;
     @Value("${swift-amount-condition}")
     private              Double SWIFT_AMOUNT_CONDITION;
+    @Value("${undervalued-condition}")
+    private              Double UNDERVALUED_CONDITION;
+    @Value("${overvalued-condition}")
+    private              Double OVERVALUED_CONDITION;
     private final static String MOVE_REGEX      = "(\\.\\\\u0020.\\\\u0020)|(\\.\\\\u0020..\\\\u0020)|(\\.\\\\u0020...\\\\u0020)|(\\.\\\\u0020....\\\\u0020)|(\\.\\\\u0020.....\\\\u0020)";
     private final static String PGN_REGEX       = "(pgn:).*";
     private final static String COLOR_REGEX     = "(White\\\\u0020\\\\u0022.+?(?=\\\\))|(Black\\\\u0020\\\\u0022.+?(?=\\\\))";
@@ -162,8 +168,10 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     @Override
     public UserDto getStatistics(String username) {
         UserDto user = new UserDto();
-        TagsInfoDto tags = new TagsInfoDto();
+        TagsDto tags = new TagsDto();
+        UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllMoves(username);
+
         double wins = 0;
         double movesCount = 0;
         for (GameDto game : games) {
@@ -184,6 +192,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                                 !games.get(games.size() - 3).isWon());
         movesCount /= games.size();
         tags.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
+        tags.setUndervalued(stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
+        tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
         user.setTags(tags);
         return user;
     }

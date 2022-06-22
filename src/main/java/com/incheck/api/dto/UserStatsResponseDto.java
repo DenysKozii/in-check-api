@@ -5,19 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import lombok.Data;
 
+import java.util.List;
+
 
 @Data
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class TagsInfoDto {
+public class UserStatsResponseDto {
 
-    private Boolean highWinRate;
-
-    private Boolean lowWinRate;
-
-    private Boolean goodMood;
-
-    private Boolean badMood;
-
-    private Boolean swift;
+    private List<UserStatsDto> stats;
 
 }

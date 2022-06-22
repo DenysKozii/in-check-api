@@ -1,6 +1,6 @@
 package com.incheck.api.service.implementation;
 
-import com.incheck.api.dto.UserDto;
+import com.incheck.api.dto.UserStatsResponseDto;
 import com.incheck.api.service.UserService;
 import com.incheck.api.utils.AbstractHttpClient;
 
@@ -23,6 +23,8 @@ import java.util.regex.Pattern;
 public class UserServiceImpl extends AbstractHttpClient implements UserService {
 
     @Value("${chess-api-stats-url}")
+    private String ID_URL;
+    @Value("${chess-api-user-stats-url}")
     private String STATS_URL;
     private final static String USER_ID_REGEX = "(data-user-id=\"\\d*\")";
 
@@ -33,7 +35,7 @@ public class UserServiceImpl extends AbstractHttpClient implements UserService {
     @Override
     public String getId(String username) throws RuntimeException {
         try {
-            Document document = Jsoup.connect(STATS_URL + username).get();
+            Document document = Jsoup.connect(ID_URL + username).get();
             Elements html = document.getAllElements();
             Pattern pattern = Pattern.compile(USER_ID_REGEX);
             Matcher matcher = pattern.matcher(html.toString());
@@ -43,10 +45,20 @@ public class UserServiceImpl extends AbstractHttpClient implements UserService {
                               .replace("data-user-id=","");
             }
         } catch (IOException e) {
-            log.error("Parse html has an error by url: {}", STATS_URL + username);
-            throw new RuntimeException(String.format("Jsoup connection failed for url: %s", STATS_URL + username));
+            log.error("Parse html has an error by url: {}", ID_URL + username);
+            throw new RuntimeException(String.format("Jsoup connection failed for url: %s", ID_URL + username));
         }
         return "";
+    }
+
+    @Override
+    public UserStatsResponseDto getStats(String username) {
+        try {
+            return get(STATS_URL + username, UserStatsResponseDto.class);
+        } catch (RuntimeException e) {
+            log.error("error while getting user stats by url {}", STATS_URL+username);
+        }
+        return new UserStatsResponseDto();
     }
 
     @Override
