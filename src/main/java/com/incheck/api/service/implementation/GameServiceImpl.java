@@ -4,6 +4,7 @@ import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GameIdResponseDto;
 import com.incheck.api.dto.ListGameIdResponses;
 import com.incheck.api.dto.MoveDto;
+import com.incheck.api.dto.TagsInfoDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.service.GameService;
 import com.incheck.api.service.UserService;
@@ -161,6 +162,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     @Override
     public UserDto getStatistics(String username) {
         UserDto user = new UserDto();
+        TagsInfoDto tags = new TagsInfoDto();
         List<GameDto> games = getAllMoves(username);
         double wins = 0;
         double movesCount = 0;
@@ -171,16 +173,18 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
             movesCount += game.getMoves().size() / 2.0;
         }
         user.setWinRate(wins / games.size());
-        user.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
-        user.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
-        user.setGoodMood(games.get(games.size() - 1).isWon() &&
+
+        tags.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
+        tags.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
+        tags.setGoodMood(games.get(games.size() - 1).isWon() &&
                                  games.get(games.size() - 2).isWon() &&
                                  games.get(games.size() - 3).isWon());
-        user.setBadMood(!games.get(games.size() - 1).isWon() &&
+        tags.setBadMood(!games.get(games.size() - 1).isWon() &&
                                 !games.get(games.size() - 2).isWon() &&
                                 !games.get(games.size() - 3).isWon());
         movesCount /= games.size();
-        user.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
+        tags.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
+        user.setTags(tags);
         return user;
     }
 
