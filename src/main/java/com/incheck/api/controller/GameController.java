@@ -1,6 +1,6 @@
 package com.incheck.api.controller;
 
-import com.incheck.api.dto.GameDto;
+import com.incheck.api.dto.GamesResponseDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.service.GameService;
 
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.AllArgsConstructor;
 
-import java.util.List;
-
 @RestController
 @AllArgsConstructor
 @CrossOrigin(origins = "*")
@@ -23,8 +21,8 @@ public class GameController {
     private final GameService gameService;
 
     @GetMapping("{username}")
-    public List<GameDto> allMoves(@PathVariable String username) {
-        return gameService.getAllMoves(username);
+    public GamesResponseDto allMoves(@PathVariable String username) {
+        return gameService.getAllGames(username);
     }
 
     @GetMapping("stats/{username}")
