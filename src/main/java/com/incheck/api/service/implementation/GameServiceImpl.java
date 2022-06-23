@@ -42,6 +42,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double UNDERVALUED_CONDITION;
     @Value("${overvalued-condition}")
     private              Double OVERVALUED_CONDITION;
+    @Value("${never-surrender-condition}")
+    private              Double NEVER_SURRENDER_CONDITION;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
@@ -74,42 +76,54 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
         double wins = 0;
-        double movesCount = 0;
+        int gamesCount = 0;
+        int movesCount = 0;
+        double surrendersCount = 0;
+        boolean isWhite;
+        boolean isBlack;
         for (GameDto game : games) {
-            game.setWon((game.getWhite().getUsername().equals(username)
-                    && Result.WIN.getResult().equals(game.getWhite().getResult()))
-                                || (game.getBlack().getUsername().equals(username)
-                    && Result.WIN.getResult().equals(game.getBlack().getResult())));
-            if (game.isWon()) {
-                wins++;
+            if (game.isRated()) {
+                gamesCount++;
+                isWhite = game.getWhite().getUsername().equals(username);
+                isBlack = game.getBlack().getUsername().equals(username);
+                game.setWon((isWhite && Result.WIN.getResult().equals(game.getWhite().getResult()))
+                                    || (isBlack && Result.WIN.getResult().equals(game.getBlack().getResult())));
+                surrendersCount += (isWhite && Result.RESIGNED.getResult().equals(game.getWhite().getResult()))
+                                           || (isBlack && Result.RESIGNED.getResult().equals(game.getBlack().getResult()))
+                                   ? 1 : 0;
+                if (game.isWon()) {
+                    wins++;
+                }
+                Matcher movesMatcher = movesPattern.matcher(game.getPgn());
+                Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
+                String opening;
+                String moves = "1";
+                while (movesMatcher.find()) {
+                    moves = movesMatcher.group().replace(". ", "");
+                }
+                if (openingsMatcher.find()) {
+                    opening = openingsMatcher.group().replace("openings/", "");
+                    user.getOpenings().add(opening);
+                }
+                movesCount += Integer.parseInt(moves);
             }
-            Matcher movesMatcher = movesPattern.matcher(game.getPgn());
-            Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
-            String opening;
-            String moves = "1";
-            while (movesMatcher.find()) {
-                moves = movesMatcher.group().replace(". ", "");
-            }
-            if (openingsMatcher.find()) {
-                opening = openingsMatcher.group().replace("openings/", "");
-                user.getOpenings().add(opening);
-            }
-            movesCount += Integer.parseInt(moves);
         }
-        user.setWinRate(wins / games.size());
+        user.setWinRate(wins / gamesCount);
 
-        tags.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
-        tags.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
+        tags.setHighWinRate(wins / gamesCount > HIGH_WIN_RATE);
+        tags.setLowWinRate(wins / gamesCount < LOW_WIN_RATE);
         tags.setGoodMood(games.get(games.size() - 1).isWon() &&
                                  games.get(games.size() - 2).isWon() &&
                                  games.get(games.size() - 3).isWon());
         tags.setBadMood(!games.get(games.size() - 1).isWon() &&
                                 !games.get(games.size() - 2).isWon() &&
                                 !games.get(games.size() - 3).isWon());
-        movesCount /= games.size();
+        movesCount /= gamesCount;
+        surrendersCount /= gamesCount;
         tags.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
         tags.setUndervalued(stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
         tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
+        tags.setNeverSurrender(surrendersCount < NEVER_SURRENDER_CONDITION);
         user.setTags(tags);
 
         return user;

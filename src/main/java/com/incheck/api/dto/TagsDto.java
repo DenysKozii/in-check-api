@@ -24,4 +24,6 @@ public class TagsDto {
 
     private Boolean overvalued;
 
+    private Boolean neverSurrender;
+
 }

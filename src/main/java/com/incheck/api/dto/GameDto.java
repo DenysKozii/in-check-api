@@ -10,6 +10,8 @@ public class GameDto {
 
     private String pgn;
 
+    private boolean rated;
+
     private PlayerDto white;
 
     private PlayerDto black;
