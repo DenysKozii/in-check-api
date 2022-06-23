@@ -46,6 +46,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double NEVER_SURRENDER_CONDITION;
     @Value("${surrenderer-condition}")
     private              Double SURRENDERER_CONDITION;
+    @Value("${executioner-condition}")
+    private              Double EXECUTIONER_CONDITION;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
@@ -81,6 +83,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         int gamesCount = 0;
         int movesCount = 0;
         double surrendersCount = 0;
+        int executionerWins = 0;
         boolean isWhite;
         boolean isBlack;
         for (GameDto game : games) {
@@ -109,6 +112,9 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                 }
                 movesCount += Integer.parseInt(moves);
             }
+            if (games.indexOf(game) >= games.size() - 10 && game.isWon()) {
+                executionerWins++;
+            }
         }
         user.setWinRate(wins / gamesCount);
 
@@ -127,6 +133,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
         tags.setNeverSurrender(surrendersCount < NEVER_SURRENDER_CONDITION);
         tags.setSurrenderer(surrendersCount > SURRENDERER_CONDITION);
+        tags.setExecutioner(executionerWins > EXECUTIONER_CONDITION);
         user.setTags(tags);
 
         return user;

@@ -28,4 +28,6 @@ public class TagsDto {
 
     private Boolean surrenderer;
 
+    private Boolean executioner;
+
 }
