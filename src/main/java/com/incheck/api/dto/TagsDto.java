@@ -26,4 +26,6 @@ public class TagsDto {
 
     private Boolean neverSurrender;
 
+    private Boolean surrenderer;
+
 }

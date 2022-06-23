@@ -44,6 +44,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double OVERVALUED_CONDITION;
     @Value("${never-surrender-condition}")
     private              Double NEVER_SURRENDER_CONDITION;
+    @Value("${surrenderer-condition}")
+    private              Double SURRENDERER_CONDITION;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
@@ -124,6 +126,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         tags.setUndervalued(stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
         tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
         tags.setNeverSurrender(surrendersCount < NEVER_SURRENDER_CONDITION);
+        tags.setSurrenderer(surrendersCount > SURRENDERER_CONDITION);
         user.setTags(tags);
 
         return user;
