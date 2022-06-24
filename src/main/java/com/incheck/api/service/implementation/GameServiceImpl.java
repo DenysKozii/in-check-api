@@ -84,12 +84,11 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames().stream()
                                                    .filter(GameDto::isRated)
-                                                   .sorted(Comparator.comparing(GameDto::getEndTime).reversed())
+                                                   .sorted(Comparator.comparing(GameDto::getEndTime))
                                                    .collect(Collectors.toList());
         games = games.subList(games.size() - 30, games.size());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
-
         double wins = 0;
         int movesCount = 0;
         double surrendersCount = 0;
