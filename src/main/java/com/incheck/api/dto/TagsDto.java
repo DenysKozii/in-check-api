@@ -14,7 +14,7 @@ public class TagsDto {
 
     private Boolean lowWinRate;
 
-    private Boolean goodMood;
+    private Boolean goodMood1;
 
     private Boolean badMood;
 
