@@ -12,6 +12,8 @@ public class GameDto {
 
     private boolean rated;
 
+    private String endTime;
+
     private PlayerDto white;
 
     private PlayerDto black;

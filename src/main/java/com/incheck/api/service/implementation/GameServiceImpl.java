@@ -18,10 +18,16 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -74,8 +80,11 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     public UserDto getStatistics(String username) {
         UserDto user = new UserDto();
         TagsDto tags = new TagsDto();
+        ArrayList<String> openings = new ArrayList<>();
         UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
-        List<GameDto> games = getAllGames(username).getGames();
+        List<GameDto> games = getAllGames(username).getGames().stream()
+                                                   .filter(GameDto::isRated)
+                                                   .collect(Collectors.toList());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
@@ -86,18 +95,17 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         int executionerWins = 0;
         boolean isWhite;
         boolean isBlack;
-        for (GameDto game : games) {
-            if (game.isRated()) {
-                gamesCount++;
-                isWhite = game.getWhite().getUsername().equals(username);
-                isBlack = game.getBlack().getUsername().equals(username);
-                game.setWon((isWhite && Result.WIN.getResult().equals(game.getWhite().getResult()))
-                                    || (isBlack && Result.WIN.getResult().equals(game.getBlack().getResult())));
-                surrendersCount += (isWhite && Result.RESIGNED.getResult().equals(game.getWhite().getResult()))
-                                           || (isBlack && Result.RESIGNED.getResult().equals(game.getBlack().getResult()))
-                                   ? 1 : 0;
-                if (game.isWon()) {
-                    wins++;
+        for (GameDto game : games.subList(games.size() - 30, games.size())) {
+            gamesCount++;
+            isWhite = game.getWhite().getUsername().equals(username);
+            isBlack = game.getBlack().getUsername().equals(username);
+            game.setWon((isWhite && Result.WIN.getResult().equals(game.getWhite().getResult()))
+                                || (isBlack && Result.WIN.getResult().equals(game.getBlack().getResult())));
+            surrendersCount += (isWhite && Result.RESIGNED.getResult().equals(game.getWhite().getResult()))
+                                       || (isBlack && Result.RESIGNED.getResult().equals(game.getBlack().getResult()))
+                               ? 1 : 0;
+            if (game.isWon()) {
+                wins++;
                 }
                 Matcher movesMatcher = movesPattern.matcher(game.getPgn());
                 Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
@@ -107,17 +115,21 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                     moves = movesMatcher.group().replace(". ", "");
                 }
                 if (openingsMatcher.find()) {
-                    opening = openingsMatcher.group().replace("openings/", "");
-                    user.getOpenings().add(opening);
+                    String[] openingWords = openingsMatcher.group()
+                                                           .replace("openings/", "")
+                                                           .replace("...", "-")
+                                                           .split("-");
+                    opening = openingWords[0] + "-" + openingWords[1];
+                    openings.add(opening);
+
+                    movesCount += Integer.parseInt(moves);
                 }
-                movesCount += Integer.parseInt(moves);
-            }
             if (games.indexOf(game) >= games.size() - 10 && game.isWon()) {
                 executionerWins++;
             }
         }
+        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / gamesCount);
-
         tags.setHighWinRate(wins / gamesCount > HIGH_WIN_RATE);
         tags.setLowWinRate(wins / gamesCount < LOW_WIN_RATE);
         tags.setGoodMood(games.get(games.size() - 1).isWon() &&
@@ -137,6 +149,18 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         user.setTags(tags);
 
         return user;
+    }
+
+    private List<String> sortOpenings(List<String> openings) {
+        HashMap<String, Integer> countedOpenings = new HashMap<>();
+        for (String opening : openings) {
+            countedOpenings.merge(opening, 1, Integer::sum);
+        }
+        return countedOpenings.entrySet().stream()
+                              .sorted(Map.Entry.comparingByValue())
+                              .map(Map.Entry::getKey)
+                              .sorted(Collections.reverseOrder())
+                              .collect(Collectors.toList());
     }
 
     @Override
