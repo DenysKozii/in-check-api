@@ -12,6 +12,8 @@ public class TagsDto {
 
     private Boolean highWinRate;
 
+    private Boolean test;
+
     private Boolean lowWinRate;
 
     private Boolean goodMood;
