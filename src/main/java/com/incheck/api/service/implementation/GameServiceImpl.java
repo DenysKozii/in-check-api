@@ -21,13 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -84,19 +84,19 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames().stream()
                                                    .filter(GameDto::isRated)
+                                                   .sorted(Comparator.comparing(GameDto::getEndTime).reversed())
                                                    .collect(Collectors.toList());
+        games = games.subList(games.size() - 30, games.size());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
         double wins = 0;
-        int gamesCount = 0;
         int movesCount = 0;
         double surrendersCount = 0;
         int executionerWins = 0;
         boolean isWhite;
         boolean isBlack;
-        for (GameDto game : games.subList(games.size() - 30, games.size())) {
-            gamesCount++;
+        for (GameDto game : games) {
             isWhite = game.getWhite().getUsername().equals(username);
             isBlack = game.getBlack().getUsername().equals(username);
             game.setWon((isWhite && Result.WIN.getResult().equals(game.getWhite().getResult()))
@@ -106,40 +106,40 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                                ? 1 : 0;
             if (game.isWon()) {
                 wins++;
-                }
-                Matcher movesMatcher = movesPattern.matcher(game.getPgn());
-                Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
-                String opening;
-                String moves = "1";
-                while (movesMatcher.find()) {
-                    moves = movesMatcher.group().replace(". ", "");
-                }
-                if (openingsMatcher.find()) {
-                    String[] openingWords = openingsMatcher.group()
-                                                           .replace("openings/", "")
-                                                           .replace("...", "-")
-                                                           .split("-");
-                    opening = openingWords[0] + "-" + openingWords[1];
-                    openings.add(opening);
+            }
+            Matcher movesMatcher = movesPattern.matcher(game.getPgn());
+            Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
+            String opening;
+            String moves = "1";
+            while (movesMatcher.find()) {
+                moves = movesMatcher.group().replace(". ", "");
+            }
+            if (openingsMatcher.find()) {
+                String[] openingWords = openingsMatcher.group()
+                                                       .replace("openings/", "")
+                                                       .replace("...", "-")
+                                                       .split("-");
+                opening = openingWords[0] + "-" + openingWords[1];
+                openings.add(opening);
 
-                    movesCount += Integer.parseInt(moves);
-                }
+                movesCount += Integer.parseInt(moves);
+            }
             if (games.indexOf(game) >= games.size() - 10 && game.isWon()) {
                 executionerWins++;
             }
         }
         user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
-        user.setWinRate(wins / gamesCount);
-        tags.setHighWinRate(wins / gamesCount > HIGH_WIN_RATE);
-        tags.setLowWinRate(wins / gamesCount < LOW_WIN_RATE);
+        user.setWinRate(wins / games.size());
+        tags.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
+        tags.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
         tags.setGoodMood(games.get(games.size() - 1).isWon() &&
                                  games.get(games.size() - 2).isWon() &&
                                  games.get(games.size() - 3).isWon());
         tags.setBadMood(!games.get(games.size() - 1).isWon() &&
                                 !games.get(games.size() - 2).isWon() &&
                                 !games.get(games.size() - 3).isWon());
-        movesCount /= gamesCount;
-        surrendersCount /= gamesCount;
+        movesCount /= games.size();
+        surrendersCount /= games.size();
         tags.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
         tags.setUndervalued(stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
         tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
