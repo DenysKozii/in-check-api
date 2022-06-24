@@ -54,6 +54,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double SURRENDERER_CONDITION;
     @Value("${executioner-condition}")
     private              Double EXECUTIONER_CONDITION;
+    @Value("${day-millis}")
+    private              Double DAY_MILLIS;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
@@ -129,6 +131,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         }
         user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
+        tags.setUnwarmed(System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
         tags.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
         tags.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
         tags.setGoodMood(games.get(games.size() - 1).isWon() &&

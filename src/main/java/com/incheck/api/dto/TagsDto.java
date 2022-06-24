@@ -30,4 +30,6 @@ public class TagsDto {
 
     private Boolean executioner;
 
+    private Boolean unwarmed;
+
 }
