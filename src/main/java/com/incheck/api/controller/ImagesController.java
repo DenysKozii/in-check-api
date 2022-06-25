@@ -21,7 +21,7 @@ public class ImagesController {
 
     @GetMapping
     public String getImage() throws IOException {
-        File file = new ClassPathResource("images/" + "base-position.png").getFile();
+        File file = new ClassPathResource("base-position.png").getFile();
         return Base64.getEncoder().withoutPadding().encodeToString(Files.readAllBytes(file.toPath()));
     }
 
