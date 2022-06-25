@@ -24,4 +24,6 @@ public class GameDto {
 
     private boolean won;
 
+    private AccuracyDto accuracies;
+
 }

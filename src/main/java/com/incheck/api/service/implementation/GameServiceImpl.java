@@ -54,6 +54,8 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double SURRENDERER_CONDITION;
     @Value("${executioner-condition}")
     private              Double EXECUTIONER_CONDITION;
+    @Value("${high-accuracy-condition}")
+    private              Double HIGH_ACCURACY_CONDITION;
     @Value("${day-millis}")
     private              Double DAY_MILLIS;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
@@ -80,22 +82,36 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
 
     @Override
     public UserDto getStatistics(String username) {
-        UserDto user = new UserDto();
-        ArrayList<String> openings = new ArrayList<>();
-        UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
-        List<GameDto> games = getAllGames(username).getGames().stream()
-                                                   .filter(GameDto::isRated)
-                                                   .sorted(Comparator.comparing(GameDto::getEndTime))
-                                                   .collect(Collectors.toList());
-        games = games.subList(games.size() - 30, games.size());
-        Pattern movesPattern = Pattern.compile(MOVES_REGEX);
-        Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
         double wins = 0;
         int movesCount = 0;
         double surrendersCount = 0;
+        double averageAccuracy = 0;
         int executionerWins = 0;
         boolean isWhite;
         boolean isBlack;
+        UserDto user = new UserDto();
+        ArrayList<String> openings = new ArrayList<>();
+        UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
+        List<GameDto> games = getAllGames(username).getGames();
+        for (GameDto game :games) {
+            isWhite = game.getWhite().getUsername().equals(username);
+            if (game.getAccuracies() != null){
+                averageAccuracy += isWhite ?
+                                   game.getAccuracies().getWhite() :
+                                   game.getAccuracies().getBlack();
+                movesCount++;
+            }
+        }
+        averageAccuracy /= movesCount;
+        movesCount = 0;
+        games = games.stream()
+                     .filter(GameDto::isRated)
+                     .sorted(Comparator.comparing(GameDto::getEndTime))
+                     .collect(Collectors.toList())
+                     .subList(games.size() - 30, games.size());
+        Pattern movesPattern = Pattern.compile(MOVES_REGEX);
+        Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
+
         for (GameDto game : games) {
             isWhite = game.getWhite().getUsername().equals(username);
             isBlack = game.getBlack().getUsername().equals(username);
@@ -134,6 +150,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
         setUpTag(user, TagInfo.UNWARMED, System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
+        setUpTag(user, TagInfo.HIGH_ACCURACY, averageAccuracy > HIGH_ACCURACY_CONDITION);
         setUpTag(user, TagInfo.HIGH_WIN_RATE, wins / games.size() > HIGH_WIN_RATE);
         setUpTag(user, TagInfo.LOW_WIN_RATE, wins / games.size() < LOW_WIN_RATE);
         setUpTag(user, TagInfo.SWIFT, movesCount < SWIFT_AMOUNT_CONDITION);
