@@ -4,13 +4,12 @@ import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GamesResponseDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.dto.UserStatsDto;
+import com.incheck.api.dto.UserStatsResponseDto;
 import com.incheck.api.enums.Result;
 import com.incheck.api.enums.TagInfo;
-import com.incheck.api.service.GameService;
-import com.incheck.api.service.UserService;
+import com.incheck.api.service.StatisticsService;
 import com.incheck.api.utils.AbstractHttpClient;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -31,10 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class GameServiceImpl extends AbstractHttpClient implements GameService {
-
-    @Autowired
-    private UserService userService;
+public class StatisticsServiceImpl extends AbstractHttpClient implements StatisticsService {
 
     @Value("${chess-api-games-month-url}")
     private              String GAMES_MONTH_URL;
@@ -58,10 +54,12 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     private              Double HIGH_ACCURACY_CONDITION;
     @Value("${day-millis}")
     private              Double DAY_MILLIS;
+    @Value("${chess-api-user-stats-url}")
+    private              String STATS_URL;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
-    public GameServiceImpl(RestTemplate restTemplate) {
+    public StatisticsServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
     }
 
@@ -81,7 +79,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     }
 
     @Override
-    public UserDto getStatistics(String username) {
+    public UserDto getUserInfo(String username) {
         double wins = 0;
         int movesCount = 0;
         double surrendersCount = 0;
@@ -91,7 +89,7 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
         boolean isBlack;
         UserDto user = new UserDto();
         ArrayList<String> openings = new ArrayList<>();
-        UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
+        UserStatsDto stats = getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames();
         for (GameDto game :games) {
             isWhite = game.getWhite().getUsername().equals(username);
@@ -185,6 +183,16 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                               .map(Map.Entry::getKey)
                               .sorted(Collections.reverseOrder())
                               .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserStatsResponseDto getStats(String username) {
+        try {
+            return get(STATS_URL + username, UserStatsResponseDto.class);
+        } catch (RuntimeException e) {
+            log.error("error while getting user stats by url {}", STATS_URL + username);
+        }
+        return new UserStatsResponseDto();
     }
 
     @Override
