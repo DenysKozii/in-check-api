@@ -2,6 +2,7 @@ package com.incheck.api.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.incheck.api.enums.TagInfo;
 
 import lombok.Data;
 
@@ -17,6 +18,6 @@ public class UserDto {
 
     private List<String> openings = new ArrayList<>();
 
-    private TagsDto tags;
+    private List<TagInfo> tags = new ArrayList<>();
 
 }

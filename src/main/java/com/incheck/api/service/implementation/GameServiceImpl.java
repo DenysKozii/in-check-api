@@ -2,10 +2,10 @@ package com.incheck.api.service.implementation;
 
 import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GamesResponseDto;
-import com.incheck.api.dto.TagsDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.dto.UserStatsDto;
 import com.incheck.api.enums.Result;
+import com.incheck.api.enums.TagInfo;
 import com.incheck.api.service.GameService;
 import com.incheck.api.service.UserService;
 import com.incheck.api.utils.AbstractHttpClient;
@@ -81,7 +81,6 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
     @Override
     public UserDto getStatistics(String username) {
         UserDto user = new UserDto();
-        TagsDto tags = new TagsDto();
         ArrayList<String> openings = new ArrayList<>();
         UserStatsDto stats = userService.getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames().stream()
@@ -129,28 +128,34 @@ public class GameServiceImpl extends AbstractHttpClient implements GameService {
                 executionerWins++;
             }
         }
-        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
-        user.setWinRate(wins / games.size());
-        tags.setUnwarmed(System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
-        tags.setHighWinRate(wins / games.size() > HIGH_WIN_RATE);
-        tags.setLowWinRate(wins / games.size() < LOW_WIN_RATE);
-        tags.setGoodMood(games.get(games.size() - 1).isWon() &&
-                                 games.get(games.size() - 2).isWon() &&
-                                 games.get(games.size() - 3).isWon());
-        tags.setBadMood(!games.get(games.size() - 1).isWon() &&
-                                !games.get(games.size() - 2).isWon() &&
-                                !games.get(games.size() - 3).isWon());
         movesCount /= games.size();
         surrendersCount /= games.size();
-        tags.setSwift(movesCount < SWIFT_AMOUNT_CONDITION);
-        tags.setUndervalued(stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
-        tags.setOvervalued(stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
-        tags.setNeverSurrender(surrendersCount < NEVER_SURRENDER_CONDITION);
-        tags.setSurrenderer(surrendersCount > SURRENDERER_CONDITION);
-        tags.setExecutioner(executionerWins > EXECUTIONER_CONDITION);
-        user.setTags(tags);
+
+        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
+        user.setWinRate(wins / games.size());
+        setUpTag(user, TagInfo.UNWARMED, System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
+        setUpTag(user, TagInfo.HIGH_WIN_RATE, wins / games.size() > HIGH_WIN_RATE);
+        setUpTag(user, TagInfo.LOW_WIN_RATE, wins / games.size() < LOW_WIN_RATE);
+        setUpTag(user, TagInfo.SWIFT, movesCount < SWIFT_AMOUNT_CONDITION);
+        setUpTag(user, TagInfo.UNDERVALUED, stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
+        setUpTag(user, TagInfo.OVERVALUED, stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
+        setUpTag(user, TagInfo.NEVER_SURRENDER, surrendersCount < NEVER_SURRENDER_CONDITION);
+        setUpTag(user, TagInfo.SURRENDERER, surrendersCount > SURRENDERER_CONDITION);
+        setUpTag(user, TagInfo.EXECUTIONER, executionerWins > EXECUTIONER_CONDITION);
+        setUpTag(user, TagInfo.GOOD_MOOD, games.get(games.size() - 1).isWon() &&
+                games.get(games.size() - 2).isWon() &&
+                games.get(games.size() - 3).isWon());
+        setUpTag(user, TagInfo.BAD_MOOD, !games.get(games.size() - 1).isWon() &&
+                !games.get(games.size() - 2).isWon() &&
+                !games.get(games.size() - 3).isWon());
 
         return user;
+    }
+
+    private void setUpTag(UserDto user, TagInfo tag, boolean condition) {
+        if (condition) {
+            user.getTags().add(tag);
+        }
     }
 
     private List<String> sortOpenings(List<String> openings) {
