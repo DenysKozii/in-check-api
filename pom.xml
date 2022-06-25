@@ -23,9 +23,15 @@
         <lombok.version>1.18.24</lombok.version>
         <httpclient.version>4.5.13</httpclient.version>
        <jsoup.version>1.14.3</jsoup.version>
+       <io.version>2.11.0</io.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${io.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
