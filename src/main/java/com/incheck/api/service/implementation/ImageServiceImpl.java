@@ -20,7 +20,7 @@ public class ImageServiceImpl implements ImageService {
     private String DIRECTORY;
 
     @Override
-    public String readeImage(String filename) {
+    public String readImage(String filename) {
         String path = DIRECTORY + filename;
         byte[] fileContent = new byte[0];
         try {

@@ -1,0 +1,143 @@
+{
+    "openings": {
+        "blackSuggestions": [
+            {
+                "opponent": {
+                    "moves": "d4",
+                    "title": "queen's pawn opening"
+            },
+                "suggest": {
+                    "moves": "d4 Nf6 Nc3 Bg7 Nf3 O-O",
+                    "title": "Indian Game"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 e5 Nc3",
+                    "title": "Vienna Game"
+            },
+                "suggest": {
+                    "moves": "e4 e5 Nc3 Bc5",
+                    "title": "Anderssen Defense"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "d4 d5 c4",
+                    "title": "Queen's Gambit"
+                },
+                "suggest": {
+                    "moves": "d4 d5 c4 e5",
+                    "title": "Albin Countergambit",
+                    "description":{ 
+                        "positive": "aggressive, rare, countergambit",
+                        "negative": "non-solid, weak pawn"
+                    }
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 e5 f4",
+                    "title": "King's Gambit"
+                },
+                "suggest": {
+                    "moves": "e4 e5 f4 d5",
+                    "title": "Falkbeer Countergambit"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "Nf3 d5 g3",
+                    "title": "King's Indian Attack"
+                },
+                "suggest": {
+                    "moves": "Nf3 d5 g3 c3 Bg2 Nc6 O-O e5",
+                    "title": "Sicilian Variation"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 e5 Bc4",
+                    "title": "Bishop's Opening"
+                },
+                "suggest": {
+                    "moves": "e4 e5 exd5 xd5 Nc3 Qa5",
+                    "title": "Scandinavian Defense"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "d4 d5 e4",
+                    "title": "Blackmar Gambit"
+                },
+                "suggest": {
+                    "moves": "e4 c5",
+                    "title": "Dutch Defense"
+                }
+            }
+        
+        ],
+        "White Suggestions" : [
+            {
+                "opponent": {
+                    "moves": "e4 Nf6",
+                    "title": "Alekhine's Defense"
+                },
+                "suggest": {
+                    "moves": "e4 Nf6 e5 Nd5 c4 Nb6 d4 d6 f4",
+                    "title": "Four Pawns Attack"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 c6",
+                    "title": "Caro-Kann Defense"
+                },
+                "suggest": {
+                    "moves": "e4 c6 d4 d5 f3",
+                    "title": "Fantasy Variationk"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 c5",
+                    "title": "Sicilian Defense"
+                },
+                "suggest": {
+                    "moves": "e4 e5 Bf4",
+                    "title": "London System"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "d4 f5",
+                    "title": "Dutch Defense"
+                },
+                "suggest": {
+                    "moves": "d4 f5 e5 fxe4 Nc3 Nf6 Bg5",
+                    "title": "Staunton Gambit"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 e6",
+                    "title": "French Defense"
+                },
+                "suggest": {
+                    "moves": "e4 e5 Bf4",
+                    "title": "London System"
+                }
+            },
+            {
+                "opponent": {
+                    "moves": "e4 d6",
+                    "title": "French Defense"
+                },
+                "suggest": {
+                    "moves": "e4 d6 d4 Nf6 Nc3 g6 f4",
+                    "title": "Austrian Attack"
+                }
+            }
+        ]
+    }
+}

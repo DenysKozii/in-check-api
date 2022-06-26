@@ -2,6 +2,7 @@ package com.incheck.api.service.implementation;
 
 import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GamesResponseDto;
+import com.incheck.api.dto.SuggestDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.dto.UserStatsDto;
 import com.incheck.api.dto.UserStatsResponseDto;
@@ -11,6 +12,8 @@ import com.incheck.api.service.StatisticsService;
 import com.incheck.api.utils.AbstractHttpClient;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -59,8 +62,19 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
+    private final HashMap<String, String>     openings = new HashMap<>();
+    private final HashMap<String, SuggestDto> suggests = new HashMap<>();
+
+
     public StatisticsServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
+    }
+
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void setup() {
+        openings.put("e4 e5 Nf3", "Queen's Gambit");
+        suggests.put("Queen's Gambit", new SuggestDto("Slave Defence", "e4 e5 Nf3"));
     }
 
     @Override
@@ -88,7 +102,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         boolean isWhite;
         boolean isBlack;
         UserDto user = new UserDto();
-        ArrayList<String> openings = new ArrayList<>();
+//        ArrayList<String> openings = new ArrayList<>();
         UserStatsDto stats = getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames();
         for (GameDto game :games) {
@@ -134,7 +148,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                                                        .replace("...", "-")
                                                        .split("-");
                 opening = openingWords[0] + "-" + openingWords[1];
-                openings.add(opening);
+//                openings.add(opening);
 
                 movesCount += Integer.parseInt(moves);
             }
@@ -145,7 +159,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         movesCount /= games.size();
         surrendersCount /= games.size();
 
-        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
+//        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
         setUpTag(user, TagInfo.UNWARMED, System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
         setUpTag(user, TagInfo.HIGH_ACCURACY, averageAccuracy > HIGH_ACCURACY_CONDITION);
@@ -163,7 +177,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         setUpTag(user, TagInfo.BAD_MOOD, !games.get(games.size() - 1).isWon() &&
                 !games.get(games.size() - 2).isWon() &&
                 !games.get(games.size() - 3).isWon());
-
         return user;
     }
 

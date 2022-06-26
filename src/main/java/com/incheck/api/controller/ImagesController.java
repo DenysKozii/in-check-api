@@ -20,7 +20,7 @@ public class ImagesController {
 
     @GetMapping("{filename}")
     public String getImage(@PathVariable String filename) {
-        return imageService.readeImage(filename);
+        return imageService.readImage(filename);
     }
 
 }
