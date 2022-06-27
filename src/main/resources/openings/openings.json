@@ -77,7 +77,7 @@
             }
         
         ],
-        "White Suggestions" : [
+        "whiteSuggestions": [
             {
                 "opponent": {
                     "moves": "e4 Nf6",

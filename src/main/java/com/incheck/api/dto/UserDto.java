@@ -16,7 +16,7 @@ public class UserDto {
 
     private Double winRate;
 
-    private List<String> openings = new ArrayList<>();
+    private List<OpeningSuggestDto> openings = new ArrayList<>();
 
     private List<TagInfo> tags = new ArrayList<>();
 

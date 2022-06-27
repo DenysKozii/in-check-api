@@ -14,10 +14,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class SuggestDto {
+public class OpeningSuggestDto {
 
     private String title;
 
-    private String moves;
+    private String suggestTitle;
+
+    private String suggestMoves;
 
 }

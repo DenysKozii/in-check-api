@@ -2,7 +2,7 @@ package com.incheck.api.service.implementation;
 
 import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GamesResponseDto;
-import com.incheck.api.dto.SuggestDto;
+import com.incheck.api.dto.OpeningSuggestDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.dto.UserStatsDto;
 import com.incheck.api.dto.UserStatsResponseDto;
@@ -11,6 +11,10 @@ import com.incheck.api.enums.TagInfo;
 import com.incheck.api.service.StatisticsService;
 import com.incheck.api.utils.AbstractHttpClient;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -20,7 +24,8 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,12 +64,13 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private              Double DAY_MILLIS;
     @Value("${chess-api-user-stats-url}")
     private              String STATS_URL;
+    @Value("${openings-directory}")
+    private              String OPENINGS_DIRECTORY;
     private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
     private final static String MOVES_REGEX    = "([0-9]+\\. )";
 
-    private final HashMap<String, String>     openings = new HashMap<>();
-    private final HashMap<String, SuggestDto> suggests = new HashMap<>();
-
+    private final HashMap<String, OpeningSuggestDto> whiteOpenings = new HashMap<>();
+    private final HashMap<String, OpeningSuggestDto> blackOpenings = new HashMap<>();
 
     public StatisticsServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
@@ -73,8 +79,34 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
 
     @EventListener(ApplicationReadyEvent.class)
     public void setup() {
-        openings.put("e4 e5 Nf3", "Queen's Gambit");
-        suggests.put("Queen's Gambit", new SuggestDto("Slave Defence", "e4 e5 Nf3"));
+        JSONParser jsonParser = new JSONParser();
+        try {
+            Object obj = jsonParser.parse(new FileReader(OPENINGS_DIRECTORY));
+            JSONObject jsonObject = (JSONObject) obj;
+            JSONObject openings = (JSONObject) jsonObject.get("openings");
+            JSONArray whiteSuggestions = (JSONArray) openings.get("whiteSuggestions");
+            JSONArray blackSuggestions = (JSONArray) openings.get("blackSuggestions");
+            fillOpenings(whiteSuggestions, whiteOpenings);
+            fillOpenings(blackSuggestions, blackOpenings);
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        System.out.println(whiteOpenings);
+        System.out.println(blackOpenings);
+    }
+
+    private void fillOpenings(JSONArray jsonArray, HashMap<String, OpeningSuggestDto> openings) {
+        for (Object jsonObj : jsonArray) {
+            JSONObject json = (JSONObject) jsonObj;
+            JSONObject opponent = (JSONObject) json.get("opponent");
+            JSONObject suggest = (JSONObject) json.get("suggest");
+            String moves = opponent.get("moves").toString();
+            String suggestMoves = suggest.get("moves").toString();
+            String title = opponent.get("title").toString();
+            String suggestTitle = suggest.get("title").toString();
+            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, suggestTitle, suggestMoves);
+            openings.put(moves, openingSuggest);
+        }
     }
 
     @Override
@@ -120,7 +152,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                      .filter(GameDto::isRated)
                      .sorted(Comparator.comparing(GameDto::getEndTime))
                      .collect(Collectors.toList())
-                     .subList(games.size() - 30, games.size());
+                     .subList(Math.min(games.size() - 30, games.size()), games.size());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
