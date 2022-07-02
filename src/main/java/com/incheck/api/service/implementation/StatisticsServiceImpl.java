@@ -152,7 +152,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                      .filter(GameDto::isRated)
                      .sorted(Comparator.comparing(GameDto::getEndTime))
                      .collect(Collectors.toList())
-                     .subList(Math.max(games.size(), Math.min(games.size() - 30, games.size())), games.size());
+                     .subList(Math.max(0, Math.min(games.size() - 30, games.size())), games.size());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
