@@ -105,7 +105,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             String suggestMoves = suggest.get("moves").toString();
             String title = opponent.get("title").toString();
             String suggestTitle = suggest.get("title").toString();
-            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, suggestTitle, suggestMoves);
+            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, moves, suggestTitle, suggestMoves);
             openings.put(moves, openingSuggest);
         }
     }
