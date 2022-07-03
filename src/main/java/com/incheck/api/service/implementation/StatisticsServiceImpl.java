@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -60,8 +61,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private              Double EXECUTIONER_CONDITION;
     @Value("${high-accuracy-condition}")
     private              Double HIGH_ACCURACY_CONDITION;
-    @Value("${day-millis}")
-    private              Double DAY_MILLIS;
+    @Value("${day-seconds}")
+    private              Double DAY_SECONDS;
     @Value("${chess-api-user-stats-url}")
     private              String STATS_URL;
     @Value("${openings-directory}")
@@ -213,7 +214,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
 //        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
         user.setWins((int) wins);
-        setUpTag(user, TagInfo.UNWARMED, System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
+        setUpTag(user, TagInfo.UNWARMED, Instant.now().getEpochSecond() - DAY_SECONDS > games.get(0).getEndTime());
         setUpTag(user, TagInfo.HIGH_ACCURACY, averageAccuracy > HIGH_ACCURACY_CONDITION);
         setUpTag(user, TagInfo.HIGH_WIN_RATE, wins / games.size() > HIGH_WIN_RATE);
         setUpTag(user, TagInfo.LOW_WIN_RATE, wins / games.size() < LOW_WIN_RATE);
