@@ -67,8 +67,9 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private              String STATS_URL;
     @Value("${openings-directory}")
     private              String OPENINGS_DIRECTORY;
-    private final static String OPENINGS_REGEX = "(openings/).+?(?=\")";
-    private final static String MOVES_REGEX    = "([0-9]+\\. )";
+    private final static String OPENINGS_REGEX     = "(openings/).+?(?=\")";
+    private final static String MOVES_NUMBER_REGEX = "([0-9]+\\. )";
+    private final static String MOVES_REGEX        = "(([0-9]+\\. )|([0-9]+\\... ))(.+?(?= ))";
 
     private final HashMap<String, OpeningSuggestDto> whiteOpenings = new HashMap<>();
     private final HashMap<String, OpeningSuggestDto> blackOpenings = new HashMap<>();
@@ -111,7 +112,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     }
 
     @Override
-    public GamesResponseDto getAllGames(String username) {
+    public GamesResponseDto getLastGames(String username) {
         Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
         int month = c.get(Calendar.MONTH) + 1;
@@ -119,9 +120,9 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         String url = GAMES_MONTH_URL + username + "/games/" + year + "/" + formattedMonth;
         try {
             GamesResponseDto response = get(url, GamesResponseDto.class);
-            if (response.getGames().size() < 30){
+            if (response.getGames().size() < 30) {
                 month = c.get(Calendar.MONTH);
-                if (month == 0){
+                if (month == 0) {
                     year--;
                     month = 12;
                 }
@@ -149,7 +150,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         UserDto user = new UserDto();
 //        ArrayList<String> openings = new ArrayList<>();
         UserStatsDto stats = getStats(username).getStats().get(0).getStats();
-        List<GameDto> games = getAllGames(username).getGames();
+        List<GameDto> games = getLastGames(username).getGames();
         for (GameDto game :games) {
             isWhite = game.getWhite().getUsername().equalsIgnoreCase(username);
             if (game.getAccuracies() != null){
@@ -165,6 +166,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                      .filter(GameDto::isRated)
                      .sorted(Comparator.comparing(GameDto::getEndTime))
                      .collect(Collectors.toList());
+        Pattern movesCounterPattern = Pattern.compile(MOVES_NUMBER_REGEX);
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
@@ -187,23 +189,28 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             } else {
                 user.setLoses(user.getLoses() + 1);
             }
+            Matcher lastMoveNumberMatcher = movesCounterPattern.matcher(game.getPgn());
             Matcher movesMatcher = movesPattern.matcher(game.getPgn());
             Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
-            String opening;
-            String moves = "1";
+            String lastMovesNumber = "1";
+            StringBuilder moves = new StringBuilder();
+            while (lastMoveNumberMatcher.find()) {
+                lastMovesNumber = lastMoveNumberMatcher.group().replace(". ", "");
+            }
             while (movesMatcher.find()) {
-                moves = movesMatcher.group().replace(". ", "");
+                moves.append(movesMatcher.group().replaceAll(Pattern.compile("(([0-9]+\\. )|([0-9]+\\... ))").pattern(), "")).append(" ");
             }
-            if (openingsMatcher.find()) {
-                String[] openingWords = openingsMatcher.group()
-                                                       .replace("openings/", "")
-                                                       .replace("...", "-")
-                                                       .split("-");
-                opening = openingWords[0] + "-" + openingWords[1];
-//                openings.add(opening);
-
-                movesCount += Integer.parseInt(moves);
-            }
+            System.out.println(moves);
+//            if (openingsMatcher.find()) {
+//                String[] openingWords = openingsMatcher.group()
+//                                                       .replace("openings/", "")
+//                                                       .replace("...", "-")
+//                                                       .split("-");
+//                opening = openingWords[0] + "-" + openingWords[1];
+////                openings.add(opening);
+//
+//                movesCount += Integer.parseInt(lastMovesNumber);
+//            }
             if (games.indexOf(game) >= games.size() - 10 && game.isWon()) {
                 executionerWins++;
             }

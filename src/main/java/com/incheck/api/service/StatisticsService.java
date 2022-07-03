@@ -6,7 +6,7 @@ import com.incheck.api.dto.UserStatsResponseDto;
 
 public interface StatisticsService {
 
-    GamesResponseDto getAllGames(String username);
+    GamesResponseDto getLastGames(String username);
 
     UserDto getUserInfo(String username);
 
