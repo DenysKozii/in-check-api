@@ -151,7 +151,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         UserStatsDto stats = getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getAllGames(username).getGames();
         for (GameDto game :games) {
-            isWhite = game.getWhite().getUsername().equals(username);
+            isWhite = game.getWhite().getUsername().equalsIgnoreCase(username);
             if (game.getAccuracies() != null){
                 averageAccuracy += isWhite ?
                                    game.getAccuracies().getWhite() :
@@ -214,7 +214,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
 //        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
         user.setWins((int) wins);
-        setUpTag(user, TagInfo.UNWARMED, Instant.now().getEpochSecond() - DAY_SECONDS > games.get(0).getEndTime());
+        setUpTag(user, TagInfo.UNWARMED, Instant.now().getEpochSecond() - DAY_SECONDS > games.get(games.size() - 1).getEndTime());
         setUpTag(user, TagInfo.HIGH_ACCURACY, averageAccuracy > HIGH_ACCURACY_CONDITION);
         setUpTag(user, TagInfo.HIGH_WIN_RATE, wins / games.size() > HIGH_WIN_RATE);
         setUpTag(user, TagInfo.LOW_WIN_RATE, wins / games.size() < LOW_WIN_RATE);
