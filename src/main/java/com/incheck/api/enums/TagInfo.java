@@ -16,6 +16,7 @@ public enum TagInfo {
     LOW_WIN_RATE("Low Win Rate", "Some description", TagType.BAD),
     SURRENDERER("Surrenderer", "Some description", TagType.BAD),
     BAD_MOOD("Bad Mood", "Some description", TagType.BAD),
+    INACTIVE("Inactive", "Some description", TagType.BAD),
     UNWARMED("Unwarmed", "Some description", TagType.NEUTRAL),
     UNDERVALUED("Undervalued", "Some description", TagType.NEUTRAL),
     OVERVALUED("Overvalued", "Some description", TagType.NEUTRAL),

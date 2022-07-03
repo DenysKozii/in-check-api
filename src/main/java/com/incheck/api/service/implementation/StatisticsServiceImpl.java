@@ -117,7 +117,19 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         String formattedMonth = month > 10 ? String.valueOf(month) : "0" + month;
         String url = GAMES_MONTH_URL + username + "/games/" + year + "/" + formattedMonth;
         try {
-            return get(url, GamesResponseDto.class);
+            GamesResponseDto response = get(url, GamesResponseDto.class);
+            if (response.getGames().size() < 30){
+                month = c.get(Calendar.MONTH);
+                if (month == 0){
+                    year--;
+                    month = 12;
+                }
+                formattedMonth = month > 10 ? String.valueOf(month) : "0" + month;
+                url = GAMES_MONTH_URL + username + "/games/" + year + "/" + formattedMonth;
+                GamesResponseDto lastMonthGames = get(url, GamesResponseDto.class);
+                response.getGames().addAll(lastMonthGames.getGames());
+            }
+            return response;
         } catch (RuntimeException e) {
             log.error("error while getting games by url {}", url);
         }
@@ -151,8 +163,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         games = games.stream()
                      .filter(GameDto::isRated)
                      .sorted(Comparator.comparing(GameDto::getEndTime))
-                     .collect(Collectors.toList())
-                     .subList(Math.max(0, Math.min(games.size() - 30, games.size())), games.size());
+                     .collect(Collectors.toList());
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
@@ -209,6 +220,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         setUpTag(user, TagInfo.SWIFT, movesCount < SWIFT_AMOUNT_CONDITION);
         setUpTag(user, TagInfo.UNDERVALUED, stats.getRatingTimeChangeValue() / stats.getRating() < UNDERVALUED_CONDITION);
         setUpTag(user, TagInfo.OVERVALUED, stats.getRatingTimeChangeValue() / stats.getRating() > OVERVALUED_CONDITION);
+        setUpTag(user, TagInfo.INACTIVE, games.size() < 10);
         setUpTag(user, TagInfo.NEVER_SURRENDER, surrendersCount < NEVER_SURRENDER_CONDITION);
         setUpTag(user, TagInfo.SURRENDERER, surrendersCount > SURRENDERER_CONDITION);
         setUpTag(user, TagInfo.EXECUTIONER, executionerWins > EXECUTIONER_CONDITION);
