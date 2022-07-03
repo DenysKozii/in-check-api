@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -71,8 +72,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private final static String MOVES_NUMBER_REGEX = "([0-9]+\\. )";
     private final static String MOVES_REGEX        = "(([0-9]+\\. )|([0-9]+\\... ))(.+?(?= ))";
 
-    private final HashMap<String, OpeningSuggestDto> whiteOpenings = new HashMap<>();
-    private final HashMap<String, OpeningSuggestDto> blackOpenings = new HashMap<>();
+    private final Map<String, OpeningSuggestDto> whiteOpenings = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
+    private final Map<String, OpeningSuggestDto> blackOpenings = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
 
     public StatisticsServiceImpl(RestTemplate restTemplate) {
         super(restTemplate);
@@ -93,11 +94,9 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-        System.out.println(whiteOpenings);
-        System.out.println(blackOpenings);
     }
 
-    private void fillOpenings(JSONArray jsonArray, HashMap<String, OpeningSuggestDto> openings) {
+    private void fillOpenings(JSONArray jsonArray, Map<String, OpeningSuggestDto> openings) {
         for (Object jsonObj : jsonArray) {
             JSONObject json = (JSONObject) jsonObj;
             JSONObject opponent = (JSONObject) json.get("opponent");
@@ -147,8 +146,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         int executionerWins = 0;
         boolean isWhite;
         boolean isBlack;
+        Map<OpeningSuggestDto, Integer> suggests = new HashMap<>();
         UserDto user = new UserDto();
-//        ArrayList<String> openings = new ArrayList<>();
         UserStatsDto stats = getStats(username).getStats().get(0).getStats();
         List<GameDto> games = getLastGames(username).getGames();
         for (GameDto game :games) {
@@ -168,7 +167,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                      .collect(Collectors.toList());
         Pattern movesCounterPattern = Pattern.compile(MOVES_NUMBER_REGEX);
         Pattern movesPattern = Pattern.compile(MOVES_REGEX);
-        Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
         for (GameDto game : games) {
             isWhite = game.getWhite().getUsername().equalsIgnoreCase(username);
@@ -191,34 +189,35 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             }
             Matcher lastMoveNumberMatcher = movesCounterPattern.matcher(game.getPgn());
             Matcher movesMatcher = movesPattern.matcher(game.getPgn());
-            Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
             String lastMovesNumber = "1";
             StringBuilder moves = new StringBuilder();
             while (lastMoveNumberMatcher.find()) {
                 lastMovesNumber = lastMoveNumberMatcher.group().replace(". ", "");
             }
             while (movesMatcher.find()) {
-                moves.append(movesMatcher.group().replaceAll(Pattern.compile("(([0-9]+\\. )|([0-9]+\\... ))").pattern(), "")).append(" ");
+                moves.append(movesMatcher
+                                     .group().replaceAll(Pattern.compile("(([0-9]+\\. )|([0-9]+\\... ))").pattern(), ""))
+                     .append(" ");
             }
-            System.out.println(moves);
-//            if (openingsMatcher.find()) {
-//                String[] openingWords = openingsMatcher.group()
-//                                                       .replace("openings/", "")
-//                                                       .replace("...", "-")
-//                                                       .split("-");
-//                opening = openingWords[0] + "-" + openingWords[1];
-////                openings.add(opening);
-//
-//                movesCount += Integer.parseInt(lastMovesNumber);
-//            }
+            Map<String, OpeningSuggestDto> openings = isWhite ? whiteOpenings : blackOpenings;
+            for (String openingMoves : openings.keySet()) {
+                if (moves.toString().contains(openingMoves)) {
+                    suggests.merge(openings.get(openingMoves), 1, Integer::sum);
+                    break;
+                }
+            }
+            movesCount += Integer.parseInt(lastMovesNumber);
             if (games.indexOf(game) >= games.size() - 10 && game.isWon()) {
                 executionerWins++;
             }
         }
+        List<OpeningSuggestDto> openings = suggests.entrySet().stream()
+                                                   .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                                                   .map(Map.Entry::getKey)
+                                                   .collect(Collectors.toList());
+        user.setOpenings(openings.subList(0, Math.min(3, openings.size())));
         movesCount /= games.size();
         surrendersCount /= games.size();
-
-//        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
         user.setWins((int) wins);
         setUpTag(user, TagInfo.UNWARMED, Instant.now().getEpochSecond() - DAY_SECONDS > games.get(games.size() - 1).getEndTime());
@@ -247,18 +246,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         if (condition) {
             user.getTags().add(tag);
         }
-    }
-
-    private List<String> sortOpenings(List<String> openings) {
-        HashMap<String, Integer> countedOpenings = new HashMap<>();
-        for (String opening : openings) {
-            countedOpenings.merge(opening, 1, Integer::sum);
-        }
-        return countedOpenings.entrySet().stream()
-                              .sorted(Map.Entry.comparingByValue())
-                              .map(Map.Entry::getKey)
-                              .sorted(Collections.reverseOrder())
-                              .collect(Collectors.toList());
     }
 
     @Override
