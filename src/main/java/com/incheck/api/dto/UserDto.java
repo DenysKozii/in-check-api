@@ -14,6 +14,14 @@ import java.util.List;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class UserDto {
 
+    private String username;
+
+    private Integer wins = 0;
+
+    private Integer loses = 0;
+
+    private Integer draws = 0;
+
     private Double winRate;
 
     private List<OpeningSuggestDto> openings = new ArrayList<>();

@@ -4,7 +4,12 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum Result {
-    WIN("win"), RESIGNED("resigned"), TIMEOUT("timeout"), CHECKMATED("checkmated");
+    WIN("win"),
+    RESIGNED("resigned"),
+    TIMEOUT("timeout"),
+    CHECKMATED("checkmated"),
+    REPETITION("repetition"),
+    AGREED("agreed");
 
     private final String result;
 

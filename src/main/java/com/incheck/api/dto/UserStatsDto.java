@@ -10,7 +10,7 @@ import lombok.Data;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class UserStatsDto {
 
-    private Double rating;
+    private Double  rating;
 
     private Double ratingTimeChangeValue;
 

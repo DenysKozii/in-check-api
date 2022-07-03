@@ -157,8 +157,9 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         Pattern openingsPattern = Pattern.compile(OPENINGS_REGEX);
 
         for (GameDto game : games) {
-            isWhite = game.getWhite().getUsername().equals(username);
-            isBlack = game.getBlack().getUsername().equals(username);
+            isWhite = game.getWhite().getUsername().equalsIgnoreCase(username);
+            isBlack = game.getBlack().getUsername().equalsIgnoreCase(username);
+            user.setUsername(isWhite ? game.getWhite().getUsername() : game.getBlack().getUsername());
             game.setWon((isWhite && Result.WIN.getResult().equals(game.getWhite().getResult()))
                                 || (isBlack && Result.WIN.getResult().equals(game.getBlack().getResult())));
             surrendersCount += (isWhite && Result.RESIGNED.getResult().equals(game.getWhite().getResult()))
@@ -166,6 +167,13 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                                ? 1 : 0;
             if (game.isWon()) {
                 wins++;
+            } else if ((isWhite && Result.REPETITION.getResult().equals(game.getWhite().getResult()))
+                    || (isBlack && Result.REPETITION.getResult().equals(game.getBlack().getResult()))
+                    || (isWhite && Result.AGREED.getResult().equals(game.getWhite().getResult()))
+                    || (isBlack && Result.AGREED.getResult().equals(game.getBlack().getResult()))) {
+                user.setDraws(user.getDraws() + 1);
+            } else {
+                user.setLoses(user.getLoses() + 1);
             }
             Matcher movesMatcher = movesPattern.matcher(game.getPgn());
             Matcher openingsMatcher = openingsPattern.matcher(game.getPgn());
@@ -193,6 +201,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
 
 //        user.getOpenings().addAll(sortOpenings(openings).subList(0, 3));
         user.setWinRate(wins / games.size());
+        user.setWins((int) wins);
         setUpTag(user, TagInfo.UNWARMED, System.currentTimeMillis() - DAY_MILLIS > games.get(0).getEndTime());
         setUpTag(user, TagInfo.HIGH_ACCURACY, averageAccuracy > HIGH_ACCURACY_CONDITION);
         setUpTag(user, TagInfo.HIGH_WIN_RATE, wins / games.size() > HIGH_WIN_RATE);
@@ -203,10 +212,12 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         setUpTag(user, TagInfo.NEVER_SURRENDER, surrendersCount < NEVER_SURRENDER_CONDITION);
         setUpTag(user, TagInfo.SURRENDERER, surrendersCount > SURRENDERER_CONDITION);
         setUpTag(user, TagInfo.EXECUTIONER, executionerWins > EXECUTIONER_CONDITION);
-        setUpTag(user, TagInfo.GOOD_MOOD, games.get(games.size() - 1).isWon() &&
+        setUpTag(user, TagInfo.GOOD_MOOD, games.size() > 3 &&
+                games.get(games.size() - 1).isWon() &&
                 games.get(games.size() - 2).isWon() &&
                 games.get(games.size() - 3).isWon());
-        setUpTag(user, TagInfo.BAD_MOOD, !games.get(games.size() - 1).isWon() &&
+        setUpTag(user, TagInfo.BAD_MOOD, games.size() > 3 &&
+                !games.get(games.size() - 1).isWon() &&
                 !games.get(games.size() - 2).isWon() &&
                 !games.get(games.size() - 3).isWon());
         return user;
