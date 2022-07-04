@@ -2,6 +2,7 @@ package com.incheck.api.service.implementation;
 
 import com.incheck.api.dto.GameDto;
 import com.incheck.api.dto.GamesResponseDto;
+import com.incheck.api.dto.OpeningSuggestDescriptionDto;
 import com.incheck.api.dto.OpeningSuggestDto;
 import com.incheck.api.dto.UserDto;
 import com.incheck.api.dto.UserStatsDto;
@@ -28,7 +29,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +68,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     private              String STATS_URL;
     @Value("${openings-directory}")
     private              String OPENINGS_DIRECTORY;
-    private final static String OPENINGS_REGEX     = "(openings/).+?(?=\")";
     private final static String MOVES_NUMBER_REGEX = "([0-9]+\\. )";
     private final static String MOVES_REGEX        = "(([0-9]+\\. )|([0-9]+\\... ))(.+?(?= ))";
 
@@ -105,7 +104,11 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             String suggestMoves = suggest.get("moves").toString();
             String title = opponent.get("title").toString();
             String suggestTitle = suggest.get("title").toString();
-            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, moves, suggestTitle, suggestMoves);
+            JSONObject suggestDescription = (JSONObject) suggest.get("description");
+            String positive = suggestDescription.get("positive").toString();
+            String negative = suggestDescription.get("negative").toString();
+            OpeningSuggestDescriptionDto description = new OpeningSuggestDescriptionDto(positive, negative);
+            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, moves, suggestTitle, suggestMoves, description);
             openings.put(moves, openingSuggest);
         }
     }
