@@ -23,7 +23,7 @@ public class Scheduler {
     @Value("${scheduler-url}")
     private String URL;
 
-//    @Scheduled(fixedRate = 1000 * 60 * 5)
+    @Scheduled(fixedRate = 1000 * 60 * 5)
     public void timer() throws IOException {
         try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
             HttpUriRequest request = new HttpGet(URL);
