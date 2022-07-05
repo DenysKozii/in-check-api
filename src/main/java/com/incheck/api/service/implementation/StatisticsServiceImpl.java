@@ -69,7 +69,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
     @Value("${openings-directory}")
     private              String OPENINGS_DIRECTORY;
     private final static String MOVES_NUMBER_REGEX = "([0-9]+\\. )";
-    private final static String MOVES_REGEX        = "(([0-9]+\\. )|([0-9]+\\... ))(.+?(?= ))";
+    private final static String WHITE_MOVES_REGEX  = "([0-9]+\\. )(.+?(?= ))";
+    private final static String BLACK_MOVES_REGEX  = "([0-9]+\\.\\.\\. )(.+?(?= ))";
 
     private final Map<String, OpeningSuggestDto> whiteOpenings = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
     private final Map<String, OpeningSuggestDto> blackOpenings = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
@@ -86,13 +87,15 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             Object obj = jsonParser.parse(new FileReader(OPENINGS_DIRECTORY));
             JSONObject jsonObject = (JSONObject) obj;
             JSONObject openings = (JSONObject) jsonObject.get("openings");
-            JSONArray whiteSuggestions = (JSONArray) openings.get("whiteSuggestions");
-            JSONArray blackSuggestions = (JSONArray) openings.get("blackSuggestions");
+            JSONArray whiteSuggestions = (JSONArray) openings.get("whiteOpenings");
+            JSONArray blackSuggestions = (JSONArray) openings.get("blackOpenings");
             fillOpenings(whiteSuggestions, whiteOpenings);
             fillOpenings(blackSuggestions, blackOpenings);
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
+        System.out.println(whiteOpenings);
+        System.out.println(blackOpenings);
     }
 
     private void fillOpenings(JSONArray jsonArray, Map<String, OpeningSuggestDto> openings) {
@@ -169,7 +172,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                      .sorted(Comparator.comparing(GameDto::getEndTime))
                      .collect(Collectors.toList());
         Pattern movesCounterPattern = Pattern.compile(MOVES_NUMBER_REGEX);
-        Pattern movesPattern = Pattern.compile(MOVES_REGEX);
+        Pattern whiteMovesPattern = Pattern.compile(WHITE_MOVES_REGEX);
+        Pattern blackMovesPattern = Pattern.compile(BLACK_MOVES_REGEX);
 
         for (GameDto game : games) {
             isWhite = game.getWhite().getUsername().equalsIgnoreCase(username);
@@ -191,14 +195,20 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                 user.setLoses(user.getLoses() + 1);
             }
             Matcher lastMoveNumberMatcher = movesCounterPattern.matcher(game.getPgn());
-            Matcher movesMatcher = movesPattern.matcher(game.getPgn());
+            Matcher whiteMovesMatcher = whiteMovesPattern.matcher(game.getPgn());
+            Matcher blackMovesMatcher = blackMovesPattern.matcher(game.getPgn());
             String lastMovesNumber = "1";
             StringBuilder moves = new StringBuilder();
             while (lastMoveNumberMatcher.find()) {
                 lastMovesNumber = lastMoveNumberMatcher.group().replace(". ", "");
             }
-            while (movesMatcher.find()) {
-                moves.append(movesMatcher
+            while (isWhite && whiteMovesMatcher.find()) {
+                moves.append(whiteMovesMatcher
+                                     .group().replaceAll(Pattern.compile("(([0-9]+\\. )|([0-9]+\\... ))").pattern(), ""))
+                     .append(" ");
+            }
+            while (isBlack && blackMovesMatcher.find()) {
+                moves.append(blackMovesMatcher
                                      .group().replaceAll(Pattern.compile("(([0-9]+\\. )|([0-9]+\\... ))").pattern(), ""))
                      .append(" ");
             }
@@ -214,6 +224,7 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                 executionerWins++;
             }
         }
+        System.out.println(suggests);
         List<OpeningSuggestDto> openings = suggests.entrySet().stream()
                                                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                                                    .map(Map.Entry::getKey)

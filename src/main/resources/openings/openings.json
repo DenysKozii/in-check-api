@@ -1,6 +1,6 @@
 {
     "openings": {
-        "blackSuggestions": [
+        "whiteOpenings": [
             {
                 "opponent": {
                     "moves": "d4",
@@ -17,7 +17,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 e5 Nc3",
+                    "moves": "e4 Nc3",
                     "title": "Vienna Game"
             },
                 "suggest": {
@@ -31,7 +31,7 @@
             },
             {
                 "opponent": {
-                    "moves": "d4 d5 c4",
+                    "moves": "d4 c4",
                     "title": "Queen's Gambit"
                 },
                 "suggest": {
@@ -45,7 +45,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 e5 f4",
+                    "moves": "e4 f4",
                     "title": "King's Gambit"
                 },
                 "suggest": {
@@ -59,7 +59,7 @@
             },
             {
                 "opponent": {
-                    "moves": "Nf3 d5 g3",
+                    "moves": "Nf3 g3",
                     "title": "King's Indian Attack"
                 },
                 "suggest": {
@@ -73,7 +73,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 e5 Bc4",
+                    "moves": "e4 Bc4",
                     "title": "Bishop's Opening"
                 },
                 "suggest": {
@@ -87,7 +87,7 @@
             },
             {
                 "opponent": {
-                    "moves": "d4 d5 e4",
+                    "moves": "d4 e4",
                     "title": "Blackmar Gambit"
                 },
                 "suggest": {
@@ -101,10 +101,10 @@
             }
         
         ],
-        "whiteSuggestions": [
+        "blackOpenings": [
             {
                 "opponent": {
-                    "moves": "e4 Nf6",
+                    "moves": "Nf6",
                     "title": "Alekhine's Defense"
                 },
                 "suggest": {
@@ -118,7 +118,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 c6",
+                    "moves": "c6",
                     "title": "Caro-Kann Defense"
                 },
                 "suggest": {
@@ -132,7 +132,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 c5",
+                    "moves": "c5",
                     "title": "Sicilian Defense"
                 },
                 "suggest": {
@@ -146,7 +146,7 @@
             },
             {
                 "opponent": {
-                    "moves": "d4 f5",
+                    "moves": "f5",
                     "title": "Dutch Defense"
                 },
                 "suggest": {
@@ -160,7 +160,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 e6",
+                    "moves": "e6",
                     "title": "French Defense"
                 },
                 "suggest": {
@@ -174,7 +174,7 @@
             },
             {
                 "opponent": {
-                    "moves": "e4 d6",
+                    "moves": "d6",
                     "title": "French Defense"
                 },
                 "suggest": {
