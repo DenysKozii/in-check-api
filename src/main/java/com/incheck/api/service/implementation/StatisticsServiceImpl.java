@@ -87,8 +87,8 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             Object obj = jsonParser.parse(new FileReader(OPENINGS_DIRECTORY));
             JSONObject jsonObject = (JSONObject) obj;
             JSONObject openings = (JSONObject) jsonObject.get("openings");
-            JSONArray whiteSuggestions = (JSONArray) openings.get("whiteOpenings");
-            JSONArray blackSuggestions = (JSONArray) openings.get("blackOpenings");
+            JSONArray whiteSuggestions = (JSONArray) openings.get("white");
+            JSONArray blackSuggestions = (JSONArray) openings.get("black");
             fillOpenings(whiteSuggestions, whiteOpenings);
             fillOpenings(blackSuggestions, blackOpenings);
         } catch (IOException | ParseException e) {

@@ -1,6 +1,6 @@
 {
     "openings": {
-        "whiteOpenings": [
+        "white": [
             {
                 "opponent": {
                     "moves": "d4",
@@ -101,7 +101,7 @@
             }
         
         ],
-        "blackOpenings": [
+        "black": [
             {
                 "opponent": {
                     "moves": "Nf6",
