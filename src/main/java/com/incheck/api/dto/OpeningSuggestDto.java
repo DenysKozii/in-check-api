@@ -20,6 +20,8 @@ public class OpeningSuggestDto {
 
     private String moves;
 
+    private String representation;
+
     private String suggestTitle;
 
     private String suggestMoves;

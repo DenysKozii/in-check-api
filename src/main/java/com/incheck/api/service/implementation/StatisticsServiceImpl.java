@@ -94,8 +94,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-        System.out.println(whiteOpenings);
-        System.out.println(blackOpenings);
     }
 
     private void fillOpenings(JSONArray jsonArray, Map<String, OpeningSuggestDto> openings) {
@@ -105,13 +103,14 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
             JSONObject suggest = (JSONObject) json.get("suggest");
             String moves = opponent.get("moves").toString();
             String suggestMoves = suggest.get("moves").toString();
+            String representation = suggest.get("representation").toString();
             String title = opponent.get("title").toString();
             String suggestTitle = suggest.get("title").toString();
             JSONObject suggestDescription = (JSONObject) suggest.get("description");
             String positive = suggestDescription.get("positive").toString();
             String negative = suggestDescription.get("negative").toString();
             OpeningSuggestDescriptionDto description = new OpeningSuggestDescriptionDto(positive, negative);
-            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, moves, suggestTitle, suggestMoves, description);
+            OpeningSuggestDto openingSuggest = new OpeningSuggestDto(title, moves, representation, suggestTitle, suggestMoves, description);
             openings.put(moves, openingSuggest);
         }
     }
@@ -224,7 +223,6 @@ public class StatisticsServiceImpl extends AbstractHttpClient implements Statist
                 executionerWins++;
             }
         }
-        System.out.println(suggests);
         List<OpeningSuggestDto> openings = suggests.entrySet().stream()
                                                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                                                    .map(Map.Entry::getKey)
